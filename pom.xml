@@ -15,7 +15,7 @@
 	-->
 
 	<name>nginxtool</name>
-	<url>https://github.com/yunnysunny/nginxtool</url>
+	<url>https://github.com/yunnysunny/nmtool</url>
 	<licenses>
 		<license>
 			<name>The Apache Software License, Version 2.0</name>
@@ -25,8 +25,8 @@
 	</licenses>
 
 	<scm>
-		<url>https://github.com/yunnysunny/nginxtool/tags/totalshare-0.1</url>
-		<connection>scm:git:https://github.com/yunnysunny/nginxtool.git/tags/nginxtool-0.1</connection>
+		<url>https://github.com/yunnysunny/nmtool/tags/nginxtool-0.1</url>
+		<connection>scm:git:https://github.com/yunnysunny/nmtool.git/tags/nginxtool-0.1</connection>
 	</scm>
 	
 	<developers>
