@@ -135,16 +135,4 @@ public class Traffic {
 		return list;
 	}
 
-	public static void main(String argv[]) {
-
-		List<HostCalcBean> map = Traffic.getHostTraffic();
-		if (map != null) {
-			for (HostCalcBean bean:map) {
-				System.out.println(bean);
-			}
-		} else {
-			System.out.println("没有读取到数据");
-		}
-		
-	}
 }

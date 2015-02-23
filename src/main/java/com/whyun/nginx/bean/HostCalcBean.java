@@ -1,6 +1,6 @@
 package com.whyun.nginx.bean;
 
-import com.alibaba.fastjson.JSON;
+import com.whyun.util.ClassInfo;
 
 /**
  * 流量统计bean
@@ -61,7 +61,9 @@ public class HostCalcBean {
 	 */
 	@Override
 	public String toString() {
-		return JSON.toJSONString(this);
+
+		return ClassInfo.show(this);
+		
 	}
 	
 }
