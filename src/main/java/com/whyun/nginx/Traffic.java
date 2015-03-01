@@ -8,19 +8,134 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.StringTokenizer;
+//import java.util.StringTokenizer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.whyun.nginx.IConst;
 import com.whyun.nginx.bean.HostCalcBean;
+import com.whyun.nginx.bean.LogRecordBean;
 import com.whyun.nginx.util.cmd.NginxCmd;
 
 public class Traffic {
 	
 	private static final Logger LOGGER = LoggerFactory
 		.getLogger(Traffic.class);
+	
+	private static void setRequestParams(LogRecordBean record, int wordCount, String wordNow) {
+		/**
+		 * 日志格式：
+		 * log_format main '$server_name $status $body_bytes_sent $remote_addr [$time_local] "$request" '
+					'"$http_referer" "$http_user_agent" $http_x_forwarded_for';
+		 * */
+		switch(wordCount) {
+		case 1:
+			record.setServerName(wordNow);
+			break;
+		case 2:
+			record.setStatus(wordNow);
+			break;
+		case 3:
+			int bodyBytes = 0;
+			try {
+				bodyBytes = Integer.parseInt(wordNow);
+			} catch (Exception e) {
+				
+			}
+			record.setBodyBytes(bodyBytes);
+			break;
+		case 4:
+			record.setRemoteAddr(wordNow);
+			break;
+		case 5:
+			record.setTime(wordNow);
+			break;
+		case 6:
+			record.setRequestPath(wordNow);
+			break;
+		case 7:
+			record.setHttpReferer(wordNow);
+			break;
+		case 8:
+			record.setHttpUserAgent(wordNow);
+			break;
+		default:
+			break;
+		}
+	}
+	
+	private static LogRecordBean parseLog(String str) {
+		if (str == null || str.length() == 0) {
+			return null;
+		}
+		LogRecordBean record = new LogRecordBean();
+		int wordCount = 0;
+		int len = str.length();
+		char lastToken = 0;
+		boolean tokenBegin = false;
+		boolean tokenEnd = false;
+		String lastWord = "";
+		for(int i=0;i<len;i++) {
+			char c = str.charAt(i);
+			if(i == len-1) {
+				wordCount ++;
+				lastWord +=c;
+				setRequestParams(record,wordCount,lastWord);
+				break;
+			}
+			switch (c) {
+			case ' ':
+				if (tokenBegin && !tokenEnd) {//token还未结束
+					lastWord += c;
+					continue;
+				} else if (tokenEnd){//token已经结束
+					lastToken = 0;
+					tokenBegin = false;
+					continue;//略过
+				} else {//正常情况
+					wordCount++;
+
+					setRequestParams(record,wordCount,lastWord);
+					lastWord = "";
+				}
+				break;
+			case '[':
+				lastToken = '[';
+				lastWord = "";//置当前的单词为空
+				tokenBegin = true;
+				tokenEnd = false;
+				break;
+			case ']':
+				lastToken = ']';
+				tokenEnd = true;
+				wordCount++;
+
+				setRequestParams(record,wordCount,lastWord);
+				lastWord = "";
+				break;
+			case '"':
+				if (lastToken == '"') {//第二个引号
+					lastToken = 0;
+					tokenEnd = true;
+					wordCount ++;
+					setRequestParams(record,wordCount,lastWord);
+					lastWord = "";//置当前的单词为空
+				} else {//第一个引号
+					lastToken = '"';
+					tokenBegin = true;
+					tokenEnd = false;
+					lastWord = "";//置当前的单词为空
+				}
+				break;
+			
+			default:
+				lastWord += c;
+				break;
+			}
+		}
+		return record;
+	}
 
 	/**
 	 * 读取日志操作
@@ -36,7 +151,7 @@ public class Traffic {
 		FileReader reader = new FileReader(logFile);
 		BufferedReader br = null;
 		String s1 = null;
-		StringTokenizer tokenStat = null;
+//		StringTokenizer tokenStat = null;
 		/**
 		 * 日志格式：
 		 * log_format main '$server_name $status $body_bytes_sent $remote_addr [$time_local] "$request" '
@@ -45,32 +160,41 @@ public class Traffic {
 		try {
 			br = new BufferedReader(reader);
 			while ((s1 = br.readLine()) != null) {
-				tokenStat = new StringTokenizer(s1);
-				String serverName = tokenStat.nextToken();//1.域名
-				
-				if (tokenStat.hasMoreTokens()) {
-					tokenStat.nextToken();//2.staus
-				} else {
-					break;
-				}
-				
-		        
-				if (tokenStat.hasMoreTokens()) {
-					String contentLen = tokenStat.nextToken();//7.请求数据大小
-
-			        int contentLenInt = 0;
-			        try {
-			        	contentLenInt = Integer.parseInt(contentLen);
-			        } catch (Exception e) {
-			        	
-			        }
-			        if (map.containsKey(serverName)) {
+//				tokenStat = new StringTokenizer(s1);
+//				String serverName = tokenStat.nextToken();//1.域名
+//				
+//				if (tokenStat.hasMoreTokens()) {
+//					tokenStat.nextToken();//2.staus
+//				} else {
+//					break;
+//				}
+//				
+//		        
+//				if (tokenStat.hasMoreTokens()) {
+//					String contentLen = tokenStat.nextToken();//7.请求数据大小
+//
+//			        int contentLenInt = 0;
+//			        try {
+//			        	contentLenInt = Integer.parseInt(contentLen);
+//			        } catch (Exception e) {
+//			        	
+//			        }
+//			        if (map.containsKey(serverName)) {
+//			        	map.put(serverName, map.get(serverName) + contentLenInt);
+//			        } else {
+//			        	map.put(serverName, (double)contentLenInt);
+//			        }
+//				}
+				LogRecordBean record = parseLog(s1);
+				if (record != null) {
+					String serverName = record.getServerName();
+					int contentLenInt = record.getBodyBytes();
+					if (map.containsKey(serverName)) {
 			        	map.put(serverName, map.get(serverName) + contentLenInt);
 			        } else {
 			        	map.put(serverName, (double)contentLenInt);
 			        }
 				}
-		        
 			}
 		} finally {
 			if (br != null) {

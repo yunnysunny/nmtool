@@ -5,7 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 public final class ClassInfo {
-	public static final String show(Object obj) {
+	public static final String show(Object obj) throws Exception {
 		String str = "{";
 		Class<?> classz = obj.getClass();
 		Field[] fields = classz.getDeclaredFields();
@@ -29,11 +29,11 @@ public final class ClassInfo {
 					}
 					
 				} catch (IllegalArgumentException e) {
-					e.printStackTrace();
+					throw e;
 				} catch (IllegalAccessException e) {
-					e.printStackTrace();
+					throw e;
 				} catch (InvocationTargetException e) {
-					e.printStackTrace();
+					throw e;
 				}
 				
 				str += nameField + ":" + nameValue;
@@ -41,9 +41,9 @@ public final class ClassInfo {
 					str += ",";
 				}
 			} catch (SecurityException e1) {
-				e1.printStackTrace();
+				throw e1;
 			} catch (NoSuchMethodException e1) {
-				e1.printStackTrace();
+				throw e1;
 			}
 			
 		}

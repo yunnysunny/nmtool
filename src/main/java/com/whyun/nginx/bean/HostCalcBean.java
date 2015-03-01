@@ -1,11 +1,9 @@
 package com.whyun.nginx.bean;
 
-import com.whyun.util.ClassInfo;
-
 /**
  * 流量统计bean
  */
-public class HostCalcBean {
+public class HostCalcBean extends AbstractBean {
 	
 	/**  域名. */
 	private String domain;
@@ -56,14 +54,6 @@ public class HostCalcBean {
 		this.traffic = traffic;
 	}
 	
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-
-		return ClassInfo.show(this);
-		
-	}
+	
 	
 }
